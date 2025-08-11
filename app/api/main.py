@@ -35,7 +35,7 @@ def ready(retriever=Depends(get_retriever)):
 @app.post("/query", response_model=AnswerResponse, tags=["Query"])
 def query(request: QueryRequest, retriever=Depends(get_retriever)):
     """
-    Retrieve top-k contexts from FAISSm call Gemini with those contexts, return grounded answer.
+    Retrieve top-k contexts from FAISS call Gemini with those contexts, return grounded answer.
     """
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=422, detail="Query text cannot be empty")
@@ -45,6 +45,7 @@ def query(request: QueryRequest, retriever=Depends(get_retriever)):
     try:
         # Temporarily override k for testing
         retriever.k=request.k
+        retriever.repo_name = request.repo_name
         raw_results = retriever.search(request.text)
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=f"Vector store missing: {str(e)}")
@@ -64,7 +65,7 @@ def query(request: QueryRequest, retriever=Depends(get_retriever)):
     contexts = [
         ContextItem(
             file_path=r.get("file_path", "(unknown)"),
-            chunk_id=int(r.get("chunk_id", -1)),
+            chunk_id=str(r.get("chunk_id", "-1")),
             distance=float(r.get("distance", 0.0)),
             text=r.get("text", "")
         ).model_dump()

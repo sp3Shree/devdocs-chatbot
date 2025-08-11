@@ -2,6 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class QueryRequest(BaseModel):
+    repo_name: str = Field(..., description="Short repo folder name, e.g., scikit-learn")
     text: str = Field(..., description="User query text")
     k: int = Field(3, ge=1, description="Top-k results to retrieve")
     model: str = Field(default="gemini-1.5-flash", description="Model name for generation")

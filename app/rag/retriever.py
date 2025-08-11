@@ -9,10 +9,15 @@ warnings.filterwarnings("ignore")
 
 class Retriever:
     def __init__(self, model_name="all-MiniLM-L6-v2", k=3, use_separate_texts=True, repo_name="scikit-learn"):
+        self.repo_name = repo_name
+        self.model = SentenceTransformer(model_name)
+        self.use_separate_texts = use_separate_texts
+        self.k = k
+
         index_file = Path("data/vector_store") / repo_name / "faiss.index"
         metadata_file = Path("data/vector_store") / repo_name / "metadata.pkl"
         texts_file = Path("data/vector_store") / repo_name / "texts.pkl"
-        self.model = SentenceTransformer(model_name)
+
         self.index = faiss.read_index(str(index_file))
         with open(metadata_file, "rb") as f:
             self.metadata = pickle.load(f)
@@ -20,7 +25,7 @@ class Retriever:
         if use_separate_texts:
             with open(texts_file, "rb") as f:
                 self.texts = pickle.load(f)
-        self.k = k
+
 
     def search(self, query):
         query_vec = self.model.encode([query])
@@ -32,6 +37,7 @@ class Retriever:
                 if self.texts is not None and "text" not in result:
                     result["text"] = self.texts[idx] # Get the text aligned by the index
                 result["distance"] = float(dist)
+                result["repo_name"] = self.repo_name
                 results.append(result)
         return results
 
