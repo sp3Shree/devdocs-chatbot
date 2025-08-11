@@ -5,6 +5,9 @@ import faiss
 import argparse
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
+import warnings
+
+warnings.filterwarnings("ignore")
 
 def load_chunks(jsonl_path):
     chunks = []
