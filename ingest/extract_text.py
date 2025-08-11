@@ -8,6 +8,9 @@ import re
 from pathlib import Path
 from git import Repo
 from dotenv import load_dotenv
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # Load from .env file into environment
 load_dotenv()
