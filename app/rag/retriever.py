@@ -2,25 +2,29 @@ import pickle
 import faiss
 import argparse
 from sentence_transformers import SentenceTransformer
-from pathlib import Path
+from app import project_paths
 import warnings
 
 warnings.filterwarnings("ignore")
 
 class Retriever:
-    def __init__(self, model_name="all-MiniLM-L6-v2", k=3, use_separate_texts=True, repo_name="scikit-learn"):
+    def __init__(self, model_name = "all-MiniLM-L6-v2", k = 3, use_separate_texts = True, repo_name = "scikit-learn"):
         self.repo_name = repo_name
         self.model = SentenceTransformer(model_name)
         self.use_separate_texts = use_separate_texts
         self.k = k
 
-        index_file = Path("data/vector_store") / repo_name / "faiss.index"
-        metadata_file = Path("data/vector_store") / repo_name / "metadata.pkl"
-        texts_file = Path("data/vector_store") / repo_name / "texts.pkl"
+        index_file = project_paths.VECTOR_STORE / repo_name / "faiss.index"
+        metadata_file = project_paths.VECTOR_STORE / repo_name / "metadata.pkl"
+        texts_file = project_paths.VECTOR_STORE / repo_name / "texts.pkl"
+
+        if not index_file.exists() or not metadata_file.exists():
+            raise FileNotFoundError(f"Missing vector store for repo '{repo_name}' at {project_paths.VECTOR_STORE}")
 
         self.index = faiss.read_index(str(index_file))
         with open(metadata_file, "rb") as f:
             self.metadata = pickle.load(f)
+
         self.texts = None
         if use_separate_texts:
             with open(texts_file, "rb") as f:
@@ -42,16 +46,16 @@ class Retriever:
         return results
 
 def main():
-    parser = argparse.ArgumentParser(description="Semantic retrieval over FAISS index")
-    parser.add_argument("--query", required=True, help="Natural language query")
-    parser.add_argument("--k", type=int, default=3, help="Top-k results")
-    parser.add_argument("--model", default="all-MiniLM-L6-v2", help="SentenceTransformer Embedding model")
-    parser.add_argument("--use_separate_texts", action="store_true", help="Load text from texts.pkl instead of metadata")
-    parser.add_argument("--show-text", action="store_true", help="Print chunk text")
-    parser.add_argument("--repo_name", required=True, help="Name of the repo to retrieve from")
+    parser = argparse.ArgumentParser(description = "Semantic retrieval over FAISS index")
+    parser.add_argument("--query", required = True, help = "Natural language query")
+    parser.add_argument("--k", type = int, default = 3, help = "Top-k results")
+    parser.add_argument("--model", default = "all-MiniLM-L6-v2", help = "SentenceTransformer Embedding model")
+    parser.add_argument("--use_separate_texts", action = "store_true", help = "Load text from texts.pkl instead of metadata")
+    parser.add_argument("--show-text", action = "store_true", help = "Print chunk text")
+    parser.add_argument("--repo_name", required = True, help = "Name of the repo to retrieve from")
     args = parser.parse_args()
 
-    retriever = Retriever(model_name=args.model, k=args.k, use_separate_texts=args.use_separate_texts, repo_name=args.repo_name)
+    retriever = Retriever(model_name = args.model, k = args.k, use_separate_texts = args.use_separate_texts, repo_name = args.repo_name)
     results = retriever.search(args.query)
 
     if not results:
