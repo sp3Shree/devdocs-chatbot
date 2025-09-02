@@ -23,3 +23,6 @@ class project_paths:
     MANIFESTS = DATA / "manifests"
     CHUNKS = DATA / "chunks"              # expect subdir per repo_name
     VECTOR_STORE = DATA / "vector_store"  # expect subdir per repo_name
+
+for p in [project_paths.DATA, project_paths.RAW, project_paths.MANIFESTS, project_paths.CHUNKS, project_paths.VECTOR_STORE]:
+    p.mkdir(parents=True, exist_ok=True)
