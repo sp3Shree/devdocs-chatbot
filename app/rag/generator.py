@@ -18,10 +18,6 @@ SYSTEM_PROMPT = (
 )
 
 def _build_prompt(query, contexts) -> str:
-    """
-    Stitch retrieved chunks into a single prompt block.
-    Each context item is expected to have 'file_path' and 'text'.
-    """
     parts = [f"System: {SYSTEM_PROMPT}", f"Question: {query}", "Context:"]
     for c in contexts:
             parts.append(f"\n---\nFile: {c.get('file_path','(unknown')}\n{c.get('text','')}\n")
@@ -48,7 +44,7 @@ def generate_answer(query, k=3, model_name=MODEL_NAME, max_output_tokens=600, te
     # Create the model and generate a response
     model = genai.GenerativeModel(
         model_name,
-        generation_config={
+        generation_config = {
             "max_output_tokens": max_output_tokens,
             "temperature": temperature
         }
@@ -66,7 +62,7 @@ def answer_from_contexts(query, contexts, model_name="gemini-1.5-flash", max_out
     prompt = _build_prompt(query, contexts)
     model = genai.GenerativeModel(
         model_name,
-        generation_config={
+        generation_config = {
             "max_output_tokens": max_output_tokens,
             "temperature": temperature
         }
@@ -77,13 +73,13 @@ def answer_from_contexts(query, contexts, model_name="gemini-1.5-flash", max_out
     return response.text
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate grounded answers using Gemini + FAISS retrieval")
-    parser.add_argument("--query", required=True, help="User question")
-    parser.add_argument("--k", type=int, default=3, help="Top-k contexts to retrieve")
-    parser.add_argument("--model", default=os.getenv("GEMINI_MODEL", "gemini-1.5-flash"), help="Gemini model (e.g., gemini-1.5-flash, gemini-1.5-pro)")
-    parser.add_argument("--max-output-tokens", type=int, default=600, help="Max tokens for the answer")
-    parser.add_argument("--temperature", type=float, default=0.2, help="Creativity vs determinism")
-    parser.add_argument("--dry-run", action="store_true", help="Validate GEMINI_API_KEY and exit")
+    parser = argparse.ArgumentParser(description = "Generate grounded answers using Gemini + FAISS retrieval")
+    parser.add_argument("--query", required = True, help = "User question")
+    parser.add_argument("--k", type = int, default = 3, help = "Top-k contexts to retrieve")
+    parser.add_argument("--model", default = os.getenv("GEMINI_MODEL", "gemini-1.5-flash"), help = "Gemini model (e.g., gemini-1.5-flash, gemini-1.5-pro)")
+    parser.add_argument("--max-output-tokens", type = int, default = 600, help = "Max tokens for the answer")
+    parser.add_argument("--temperature", type = float, default = 0.2, help = "Creativity vs determinism")
+    parser.add_argument("--dry-run", action = "store_true", help = "Validate GEMINI_API_KEY and exit")
     args = parser.parse_args()
 
     if args.dry_run:

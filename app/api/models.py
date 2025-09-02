@@ -2,12 +2,14 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class QueryRequest(BaseModel):
-    repo_name: str = Field(..., description="Short repo folder name, e.g., scikit-learn")
     text: str = Field(..., description="User query text")
+    repo_name: str = Field(..., description="Short repo folder name, e.g., scikit-learn")
+    repo_url: str = Field(None, description="Full GitHub repo URL, e.g., https://github.com/scikit-learn/scikit-learn")
     k: int = Field(3, ge=1, description="Top-k results to retrieve")
     model: str = Field(default="gemini-1.5-flash", description="Model name for generation")
     temperature: float = Field(0.2, ge=0.0, le=1.0, description="Temperature for generation")
     max_output_tokens: int = Field(500, ge=64, le=4096, description="Maximum output tokens for the answer")
+    force_build: bool = Field(False, description="Force clone/extract/embed of repo")
 
 class ContextItem(BaseModel):
     file_path: str = Field(..., description="Path to the file containing the context")

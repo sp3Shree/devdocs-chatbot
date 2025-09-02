@@ -1,8 +1,8 @@
 import os
 import json
+import shutil
 import argparse
 import requests
-import shutil
 import stat
 import re
 from pathlib import Path
@@ -43,7 +43,7 @@ def get_primary_language(repo_url: str, token: str = None) -> str:
     api_url = f"https://api.github.com/repos/{user}/{repo}"
     headers = {"Authorization": f"token {token}"} if token else {}
     try:
-        response = requests.get(api_url, headers=headers)
+        response = requests.get(api_url, headers=headers, timeout=15)
         response.raise_for_status()
         return response.json().get("language", "Python")
     except Exception as e:
@@ -56,19 +56,15 @@ def get_allowed_extensions(language: str) -> list:
 def should_include(path: Path, allowed_exts) -> bool:
     if path.name == "Dockerfile":
         return True
-    return (
-        path.suffix in allowed_exts and
-        not any(part in EXCLUDED_DIRS for part in path.parts)
-    )
+    return (path.suffix in allowed_exts) and not any(part in EXCLUDED_DIRS for part in path.parts)
 
 def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
     words = text.split()
-    chunks = []
-    start = 0
-    while start < len(words):
-        chunk = words[start:start + chunk_size]
+    chunks, i = [], 0
+    while i < len(words):
+        chunk = words[i:i + chunk_size]
         chunks.append(" ".join(chunk))
-        start += chunk_size - overlap
+        i += chunk_size - overlap
     return chunks
 
 def extract_text_from_repo(repo_path: Path, allowed_exts: list):
@@ -111,8 +107,8 @@ def clone_repo(repo_url: str, base_path: Path, force: bool = False):
     Repo.clone_from(repo_url, dest_path)
 
 def handle_remove_readonly(func, path, exc):
-    excvalue = exc[1]
-    if func in (os.unlink, os.rmdir) and excvalue.errno == 5:  # Access denied
+    except_value = exc[1]
+    if func in (os.unlink, os.rmdir) and except_value.errno == 5:  # Access denied
         os.chmod(path, stat.S_IWRITE)
         func(path)
     else:
@@ -121,12 +117,11 @@ def handle_remove_readonly(func, path, exc):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", required=True, help="GitHub repo URL (e.g., https://github.com/user/repo)")
-    parser.add_argument("--token", help="GitHub token (or set GITHUB_TOKEN env var)")
     parser.add_argument("--force_clone", action="store_true", help="Delete and re-clone repo")
     parser.add_argument("--local_path", default="data/raw", help="Local path to clone repo")
 
     args = parser.parse_args()
-    github_token = args.token or os.getenv("GITHUB_TOKEN")
+    github_token = os.getenv("GITHUB_TOKEN")
 
     # Clone the repo
     repo_name = get_repo_name(args.repo)

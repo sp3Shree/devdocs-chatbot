@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devdocs-chatbot-api
+    # Load environment variables (e.g., GEMINI_API_KEY)
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+        # Persist indexes/chunks between rebuilds; aligns with your repo-scoped layout
+        - ./data:/data
+        # Cache HuggingFace / sentence-transformer models locally to avoid re-downloading
+        - model_cache:/root/ .cache
+    environment:
+        # If you chose to separate texts in the vector store, set this true
+        - USE_SEPARATE_TEXTS=true
+        # Optional: narrow CORS in your FastAPI app based on this
+        - ALLOWED_ORIGINS=*
+    restart: unless-stopped
+
+volumes:
+  model_cache:
