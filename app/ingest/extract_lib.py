@@ -105,9 +105,5 @@ def extract_to_jsonl(repo_url: str, repo_name: str, base_dir: Path, github_token
     return chunks_path
 
 def handle_remove_readonly(func, path, exc):
-    except_value = exc[1]
-    if func in (os.unlink, os.rmdir) and except_value.errno == 5:  # Access denied
         os.chmod(path, stat.S_IWRITE)
         func(path)
-    else:
-        raise
