@@ -34,7 +34,7 @@ def health():
 
 @app.get("/ready", tags = ["Ready"])
 def ready():
-    return {"status": "ready", "model": "gemini-1.5-flash"}
+    return {"status": "ready", "model": "gemini-2.0-flash"}
 
 @app.post("/query", response_model = AnswerResponse, tags = ["Query"])
 def query(request: QueryRequest):
